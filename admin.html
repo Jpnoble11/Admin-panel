@@ -7,12 +7,10 @@
       name="viewport"
       content="width=device-width, initial-scale=1, shrink-to-fit=no"
     />
-
     <link
       href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900"
       rel="stylesheet"
     />
-
     <link
       rel="stylesheet"
       href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
@@ -31,12 +29,15 @@
           <h3 style="color: white; margin-left: 30px">HELLO ADMIN!</h3>
           <ul class="list-unstyled components mb-5">
             <li>
-              <a href="./admin.html"
-                ><span class="active">Reservations</span></a
-              >
+              <a href="./admin.html">
+                <span class="active">Reservations</span>
+              </a>
             </li>
             <li>
               <a href="./dashbord">Dashboard</a>
+            </li>
+            <li>
+              <a href="./history">History</a>
             </li>
             <li>
               <a onclick="confirmLogout()">Log Out</a>
@@ -45,7 +46,6 @@
 
           <div class="footer">
             <p>
-              <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
               Copyright &copy;
               <script>
                 document.write(new Date().getFullYear());
@@ -53,7 +53,6 @@
               All rights reserved | This template is made with
               <i class="icon-heart" aria-hidden="true"></i> by
               <a href="https://colorlib.com" target="_blank">Colorlib.com</a>
-              <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
             </p>
           </div>
         </div>
@@ -88,6 +87,9 @@
                   <a class="nav-link" href="./dashbord">Dashboard</a>
                 </li>
                 <li class="nav-item">
+                  <a class="nav-link" href="./history">History</a>
+                </li>
+                <li class="nav-item">
                   <a class="nav-link" onclick="confirmLogout()">Log out</a>
                 </li>
               </ul>
@@ -108,6 +110,7 @@
                 <th>Date</th>
                 <th>Time</th>
                 <th>Package</th>
+                <th>Status</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -134,12 +137,15 @@
 
     <!-- Firebase scripts -->
     <script type="module">
+      // Import Firebase modules
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
       import {
         getDatabase,
         ref,
         onValue,
+        set,
         remove,
+        push,
       } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
       // Firebase configuration
@@ -159,6 +165,34 @@
       const database = getDatabase(app);
       const reservationsRef = ref(database, "LOGFORM/reservations");
 
+      // Function to move a reservation to completed reservations
+      function moveReservationToCompleted(reservation) {
+        const completedReservationsRef = ref(
+          database,
+          "LOGFORM/completedReservations"
+        );
+
+        // Combine reservation data with the status
+        const completedReservation = {
+          ...reservation,
+          status: "completed",
+        };
+
+        // Generate a new key for the completed reservation
+        const newCompletedReservationRef = push(completedReservationsRef);
+
+        // Set the completed reservation data
+        set(newCompletedReservationRef, completedReservation);
+      }
+
+      // Function to delete a reservation and remove it from the table
+      function deleteReservation(key) {
+        const reservationRef = ref(database, `LOGFORM/reservations/${key}`);
+
+        // Remove the reservation from the current reservations
+        remove(reservationRef);
+      }
+
       // Function to render reservations in the table
       function renderReservations(reservations) {
         const reservationTableBody = document.getElementById(
@@ -171,26 +205,76 @@
           const row = document.createElement("tr");
 
           // Cells for reservation data
-          const cells = ["name", "email", "date", "time", "pack"];
+          const cells = ["name", "email", "date", "time", "pack", "status"];
           cells.forEach((cell) => {
             const cellElement = document.createElement("td");
-            cellElement.textContent = reservation[cell];
+            if (cell === "status") {
+              cellElement.appendChild(reservationStatus(reservation, key));
+            } else {
+              cellElement.textContent = reservation[cell];
+            }
             row.appendChild(cellElement);
           });
 
-          // Delete button cell
-          const deleteCell = document.createElement("td");
+          // Actions cell
+          const actionsCell = document.createElement("td");
+
+          // Delete button
           const deleteButton = document.createElement("button");
           deleteButton.textContent = "Delete";
-          deleteButton.classList.add("btn", "btn-danger");
+          deleteButton.classList.add("btn", "btn-danger", "mr-2");
           deleteButton.addEventListener("click", () => {
             deleteReservation(key);
           });
-          deleteCell.appendChild(deleteButton);
-          row.appendChild(deleteCell);
+
+          actionsCell.appendChild(deleteButton);
+          row.appendChild(actionsCell);
 
           reservationTableBody.appendChild(row);
         }
+      }
+
+      // Function to convert status to human-readable format and add click event
+      function reservationStatus(reservation, key) {
+        const statusButton = document.createElement("button");
+        statusButton.classList.add("btn");
+
+        // Set button text and style based on completion status
+        if (reservation.status === "completed") {
+          statusButton.textContent = "Completed";
+          statusButton.classList.add("btn-success");
+          statusButton.disabled = true; // Disable the button for completed reservations
+        } else {
+          statusButton.textContent = "Not Completed";
+          statusButton.classList.add("btn-primary");
+          statusButton.addEventListener("click", () => {
+            markReservationAsCompleted(key);
+          });
+        }
+
+        return statusButton;
+      }
+
+      // Function to mark a reservation as completed
+      function markReservationAsCompleted(key) {
+        const reservationRef = ref(database, `LOGFORM/reservations/${key}`);
+
+        // Retrieve the reservation data before updating the status
+        onValue(reservationRef, (snapshot) => {
+          const reservation = snapshot.val();
+
+          // Check if the reservation is already marked as completed
+          if (reservation.status !== "completed") {
+            // Update the status in the local reservation data
+            reservation.status = "completed";
+
+            // Move the reservation to completed reservations
+            moveReservationToCompleted(reservation);
+
+            // Update the status in the Firebase database
+            set(reservationRef, { status: "completed" });
+          }
+        });
       }
 
       // Firebase event listener for changes in reservations
@@ -198,11 +282,6 @@
         const reservations = snapshot.val();
         renderReservations(reservations);
       });
-
-      // Function to delete a reservation
-      function deleteReservation(key) {
-        remove(ref(database, `LOGFORM/reservations/${key}`));
-      }
 
       // Additional code for sorting by date
       document.getElementById("sortDate").addEventListener("click", () => {
@@ -227,8 +306,8 @@
           reservationTableBody.appendChild(row);
         });
       }
-    </script>
-    <script>
+
+      // Logout confirmation script
       function confirmLogout() {
         var confirmLogout = window.confirm("Are you sure you want to log out?");
 
