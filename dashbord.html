@@ -31,13 +31,13 @@
           <h3 style="color: white; margin-left: 30px">HELLO ADMIN!</h3>
           <ul class="list-unstyled components mb-5">
             <li>
-              <a href="#"><span class="active">Reservations</span></a>
+              <a href="./admin">Reservations</a>
             </li>
             <li>
-              <a href="#">Dashboard</a>
+              <a href="./dashbord"><span class="active">Dashboard</span></a>
             </li>
             <li>
-              <a href="./index.html">Log Out</a>
+              <a href="./index">Log Out</a>
             </li>
           </ul>
 
@@ -80,10 +80,10 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
               <ul class="nav navbar-nav ml-auto">
                 <li class="nav-item active">
-                  <a class="nav-link" href="#">Reservations</a>
+                  <a class="nav-link" href="./admin">Reservations</a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" href="#">Dashboard</a>
+                  <a class="nav-link" href="./dashboard">Dashboard</a>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="#">Log out</a>
@@ -95,27 +95,28 @@
 
         <!-- Main container -->
         <div class="container mt-5">
-          <h2>Reservation Management</h2>
-
-          <!-- Reservation table -->
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Package</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="reservationTableBody">
-              <!-- Reservation data will be rendered here dynamically -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+            <!-- Dashboard -->
+            <div class="row mt-5">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Package Orders</h5>
+                    <ul id="packageOrdersList" class="list-group">
+                      <!-- Package orders will be rendered here dynamically -->
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Total Reservations</h5>
+                    <p id="totalReservations">Loading...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
     <!-- Bootstrap JS and jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.4.slim.min.js"></script>
@@ -131,13 +132,18 @@
     <script src="js/main.js"></script>
 
     <!-- Firebase scripts -->
+    <!-- Bootstrap JS and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <!-- Firebase scripts -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
       import {
         getDatabase,
         ref,
         onValue,
-        remove,
       } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
       // Firebase configuration
@@ -157,74 +163,40 @@
       const database = getDatabase(app);
       const reservationsRef = ref(database, "LOGFORM/reservations");
 
-      // Function to render reservations in the table
-      function renderReservations(reservations) {
-        const reservationTableBody = document.getElementById(
-          "reservationTableBody"
-        );
-        reservationTableBody.innerHTML = "";
+      // Function to render package orders
+      function renderPackageOrders(reservations) {
+        const packageOrdersList = document.getElementById("packageOrdersList");
+        const packageOrders = [0, 0, 0, 0]; // Initialize counters for packages
 
         for (const key in reservations) {
           const reservation = reservations[key];
-          const row = document.createElement("tr");
-
-          // Cells for reservation data
-          const cells = ["name", "email", "date", "time", "pack"];
-          cells.forEach((cell) => {
-            const cellElement = document.createElement("td");
-            cellElement.textContent = reservation[cell];
-            row.appendChild(cellElement);
-          });
-
-          // Delete button cell
-          const deleteCell = document.createElement("td");
-          const deleteButton = document.createElement("button");
-          deleteButton.textContent = "Delete";
-          deleteButton.classList.add("btn", "btn-danger");
-          deleteButton.addEventListener("click", () => {
-            deleteReservation(key);
-          });
-          deleteCell.appendChild(deleteButton);
-          row.appendChild(deleteCell);
-
-          reservationTableBody.appendChild(row);
+          const packageNumber = reservation.pack; // Assuming 'pack' property represents the package number
+          packageOrders[packageNumber - 1]++; // Increment the counter for the respective package
         }
+
+        // Render package orders in the list
+        packageOrders.forEach((count, index) => {
+          const listItem = document.createElement("li");
+          listItem.classList.add("list-group-item");
+          listItem.textContent = `Package ${index + 1}: ${count} order/s`;
+          packageOrdersList.appendChild(listItem);
+        });
+      }
+
+      // Function to update total reservations
+      function updateTotalReservations(reservations) {
+        const totalReservations = document.getElementById("totalReservations");
+        totalReservations.textContent = `Total Reservation/s: ${
+          Object.keys(reservations).length
+        }`;
       }
 
       // Firebase event listener for changes in reservations
       onValue(reservationsRef, (snapshot) => {
         const reservations = snapshot.val();
-        renderReservations(reservations);
+        renderPackageOrders(reservations); // Call the new function
+        updateTotalReservations(reservations); // Call the new function
       });
-
-      // Function to delete a reservation
-      function deleteReservation(key) {
-        remove(ref(database, `LOGFORM/reservations/${key}`));
-      }
-
-      // Additional code for sorting by date
-      document.getElementById("sortDate").addEventListener("click", () => {
-        sortReservationsByDate();
-      });
-
-      // Function to sort reservations by date
-      function sortReservationsByDate() {
-        const reservationTableBody = document.getElementById(
-          "reservationTableBody"
-        );
-        const rows = Array.from(reservationTableBody.children);
-        const sortedRows = rows.sort((a, b) => {
-          const dateA = new Date(a.cells[2].textContent);
-          const dateB = new Date(b.cells[2].textContent);
-          return dateA - dateB;
-        });
-
-        // Append sorted rows to the table body
-        reservationTableBody.innerHTML = "";
-        sortedRows.forEach((row) => {
-          reservationTableBody.appendChild(row);
-        });
-      }
     </script>
   </body>
 </html>
