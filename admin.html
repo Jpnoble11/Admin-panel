@@ -39,7 +39,7 @@
               <a href="./dashbord">Dashboard</a>
             </li>
             <li>
-              <a href="./index.html">Log Out</a>
+              <a onclick="confirmLogout()">Log Out</a>
             </li>
           </ul>
 
@@ -88,7 +88,7 @@
                   <a class="nav-link" href="./dashbord">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" href="./">Log out</a>
+                  <a class="nav-link" onclick="confirmLogout()">Log out</a>
                 </li>
               </ul>
             </div>
@@ -226,6 +226,19 @@
         sortedRows.forEach((row) => {
           reservationTableBody.appendChild(row);
         });
+      }
+    </script>
+    <script>
+      function confirmLogout() {
+        var confirmLogout = window.confirm("Are you sure you want to log out?");
+
+        if (confirmLogout) {
+          // If the user clicks "Yes," perform the logout action
+          window.location.href = "./";
+        } else {
+          // If the user clicks "No," do nothing or handle accordingly
+          alert("Cancelled logout.");
+        }
       }
     </script>
   </body>

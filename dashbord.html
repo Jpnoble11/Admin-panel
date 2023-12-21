@@ -37,7 +37,7 @@
               <a href="./dashbord"><span class="active">Dashboard</span></a>
             </li>
             <li>
-              <a href="./index">Log Out</a>
+              <a onclick="confirmLogout()">Log Out</a>
             </li>
           </ul>
 
@@ -79,14 +79,14 @@
 
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
               <ul class="nav navbar-nav ml-auto">
-                <li class="nav-item active">
+                <li class="nav-item">
                   <a class="nav-link" href="./admin">Reservations</a>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item active">
                   <a class="nav-link" href="./dashboard">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" href="./">Log out</a>
+                  <a class="nav-link" onclick="confirmLogout()">Log out</a>
                 </li>
               </ul>
             </div>
@@ -95,28 +95,30 @@
 
         <!-- Main container -->
         <div class="container mt-5">
-            <!-- Dashboard -->
-            <div class="row mt-5">
-              <div class="col-md-6">
-                <div class="card">
-                  <div class="card-body">
-                    <h5 class="card-title">Package Orders</h5>
-                    <ul id="packageOrdersList" class="list-group">
-                      <!-- Package orders will be rendered here dynamically -->
-                    </ul>
-                  </div>
+          <!-- Dashboard -->
+          <div class="row mt-5">
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Package Orders</h5>
+                  <ul id="packageOrdersList" class="list-group">
+                    <!-- Package orders will be rendered here dynamically -->
+                  </ul>
                 </div>
               </div>
-              <div class="col-md-6">
-                <div class="card">
-                  <div class="card-body">
-                    <h5 class="card-title">Total Reservations</h5>
-                    <p id="totalReservations">Loading...</p>
-                  </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Total Reservations</h5>
+                  <p id="totalReservations">Loading...</p>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Bootstrap JS and jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.4.slim.min.js"></script>
@@ -197,6 +199,19 @@
         renderPackageOrders(reservations); // Call the new function
         updateTotalReservations(reservations); // Call the new function
       });
+    </script>
+    <script>
+      function confirmLogout() {
+        var confirmLogout = window.confirm("Are you sure you want to log out?");
+
+        if (confirmLogout) {
+          // If the user clicks "Yes," perform the logout action
+          window.location.href = ",/";
+        } else {
+          // If the user clicks "No," do nothing or handle accordingly
+          alert("Cancelled logout.");
+        }
+      }
     </script>
   </body>
 </html>
