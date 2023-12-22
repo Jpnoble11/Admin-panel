@@ -194,18 +194,21 @@
       // Function to update total reservations
       function updateTotalReservations(reservations) {
         const totalReservations = document.getElementById("totalReservations");
-        totalReservations.textContent = `Total Reservation/s: ${
-          Object.keys(reservations).length
-        }`;
+        const reservationCount = Object.values(reservations).reduce(
+          (acc, val) => acc + 1,
+          0
+        );
+        totalReservations.textContent = `Total Reservation/s: ${reservationCount}`;
       }
 
       // Firebase event listener for changes in reservations
       onValue(reservationsRef, (snapshot) => {
         const reservations = snapshot.val();
-        renderPackageOrders(reservations); // Call the new function
-        updateTotalReservations(reservations); // Call the new function
+        renderPackageOrders(reservations);
+        updateTotalReservations(reservations);
       });
     </script>
+
     <script>
       function confirmLogout() {
         var confirmLogout = window.confirm("Are you sure you want to log out?");

@@ -202,6 +202,12 @@
 
         for (const key in reservations) {
           const reservation = reservations[key];
+
+          // Skip completed reservations
+          if (reservation.status === "completed") {
+            continue;
+          }
+
           const row = document.createElement("tr");
 
           // Cells for reservation data
@@ -234,6 +240,28 @@
         }
       }
 
+      // Firebase event listener for changes in reservations
+      onValue(reservationsRef, (snapshot) => {
+        const reservations = snapshot.val();
+        renderReservations(reservations);
+      });
+
+      // Firebase event listener for changes in current reservations
+      onValue(reservationsRef, (snapshot) => {
+        const reservations = snapshot.val();
+        renderReservations(reservations);
+      });
+
+      // Firebase event listener for changes in completed reservations
+      const completedReservationsRef = ref(
+        database,
+        "LOGFORM/completedReservations"
+      );
+      onValue(completedReservationsRef, (snapshot) => {
+        const completedReservations = snapshot.val();
+        renderReservations(completedReservations);
+      });
+
       // Function to convert status to human-readable format and add click event
       function reservationStatus(reservation, key) {
         const statusButton = document.createElement("button");
@@ -245,7 +273,7 @@
           statusButton.classList.add("btn-success");
           statusButton.disabled = true; // Disable the button for completed reservations
         } else {
-          statusButton.textContent = "Not Completed";
+          statusButton.textContent = "Pending";
           statusButton.classList.add("btn-primary");
           statusButton.addEventListener("click", () => {
             markReservationAsCompleted(key);
@@ -256,6 +284,7 @@
       }
 
       // Function to mark a reservation as completed
+      // Function to mark a reservation as completed
       function markReservationAsCompleted(key) {
         const reservationRef = ref(database, `LOGFORM/reservations/${key}`);
 
@@ -263,7 +292,7 @@
         onValue(reservationRef, (snapshot) => {
           const reservation = snapshot.val();
 
-          // Check if the reservation is already marked as completed
+          // Check if the reservation is not already marked as completed
           if (reservation.status !== "completed") {
             // Update the status in the local reservation data
             reservation.status = "completed";
@@ -271,10 +300,27 @@
             // Move the reservation to completed reservations
             moveReservationToCompleted(reservation);
 
+            // Create a copy of the completed reservation and move it to another node
+            copyReservationToAnotherNode(reservation);
+
             // Update the status in the Firebase database
             set(reservationRef, { status: "completed" });
           }
         });
+      }
+
+      // Function to create a copy of the completed reservation and move it to another node
+      function copyReservationToAnotherNode(completedReservation) {
+        const completedReservationsRef = ref(
+          database,
+          "LOGFORM/completedReservations"
+        );
+
+        // Generate a new key for the completed reservation
+        const newCompletedReservationRef = push(completedReservationsRef);
+
+        // Set the completed reservation data
+        set(newCompletedReservationRef, completedReservation);
       }
 
       // Firebase event listener for changes in reservations
@@ -306,7 +352,8 @@
           reservationTableBody.appendChild(row);
         });
       }
-
+    </script>
+    <script>
       // Logout confirmation script
       function confirmLogout() {
         var confirmLogout = window.confirm("Are you sure you want to log out?");

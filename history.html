@@ -221,13 +221,18 @@
         return button;
       }
 
-      // Function to delete a reservation
+      // Function to delete a reservation with confirmation alert
       function deleteReservation(reservationKey) {
-        const reservationRef = ref(
-          database,
-          `LOGFORM/completedReservations/${reservationKey}`
+        const confirmation = confirm(
+          "Are you sure you want to delete this completed reservation?"
         );
-        set(reservationRef, null); // Set the data to null to delete it
+        if (confirmation) {
+          const reservationRef = ref(
+            database,
+            `LOGFORM/completedReservations/${reservationKey}`
+          );
+          set(reservationRef, null); // Set the data to null to delete it
+        }
       }
 
       // Firebase event listener for changes in reservations
@@ -235,6 +240,19 @@
         const reservations = snapshot.val();
         renderReservations(reservations);
       });
+    </script>
+    <script>
+      function confirmLogout() {
+        var confirmLogout = window.confirm("Are you sure you want to log out?");
+
+        if (confirmLogout) {
+          // If the user clicks "Yes," perform the logout action
+          window.location.href = ",/";
+        } else {
+          // If the user clicks "No," do nothing or handle accordingly
+          alert("Cancelled logout.");
+        }
+      }
     </script>
   </body>
 </html>
