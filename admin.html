@@ -245,11 +245,11 @@
           statusButton.classList.add("btn-success");
           statusButton.disabled = true; // Disable the button for completed reservations
         } else {
-          statusButton.textContent = "Not Completed";
+          statusButton.textContent = "Pending";
           statusButton.classList.add("btn-primary");
           statusButton.addEventListener("click", () => {
             markReservationAsCompleted(key);
-            alert("Reservation Approved");
+            alert("Reservation Completed");
             deleteReservation(key);
           });
         }
